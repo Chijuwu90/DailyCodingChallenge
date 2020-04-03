@@ -60,8 +60,8 @@ if __name__ == "__main__":
     end = time.time()
 
     if len(valid_letter_list) != 0:
-        #print("possible combinations: ", valid_number_list)
-        #print("possible letters     :", valid_letter_list)
+        print("possible combinations: ", valid_number_list)
+        print("possible letters     :", valid_letter_list)
         print("total number of possibilities: ", len(valid_letter_list))
         print("Time taken: ", end-start)
     else:
