@@ -1,12 +1,12 @@
 import numpy as np
 
-matrix = np.array([['f', 'f', 'f', 'f', 'f', 'f', 'f'],
-                   ['t', 't', 't', 't', 'f', 't', 'f'],
-                   ['t', 'f', 'f', 'f', 'f', 't', 'f'],
-                   ['t', 'f', 't', 't', 't', 't', 'f'],
-                   ['t', 'f', 'f', 'f', 'f', 't', 'f'],
-                   ['t', 't', 't', 't', 'f', 't', 'f'],
-                   ['f', 'f', 'f', 'f', 'f', 'f', 'f']])
+matrix = np.array([[1, 1, 1, 1, 1, 1, 1],
+                   [0, 0, 0, 0, 1, 0, 1],
+                   [0, 1, 1, 1, 1, 0, 1],
+                   [0, 1, 0, 0, 0, 0, 1],
+                   [0, 1, 1, 1, 1, 0, 1],
+                   [0, 0, 0, 0, 1, 0, 1],
+                   [1, 1, 1, 1, 1, 1, 1]])
 
 
 matrix_size = matrix.shape
@@ -14,9 +14,9 @@ n_loop = matrix_size[0]*matrix_size[1]
 
 
 def check_start_end_valid(start, end):
-    if matrix[start[0]][start[1]] == 't':
+    if matrix[start[0]][start[1]] == 0:
         raise ValueError('Start cannot be a Wall node')
-    elif matrix[end[0]][end[1]] == 't':
+    elif matrix[end[0]][end[1]] == 0:
         raise ValueError('End cannot be a Wall node')
     elif start == end:
         raise ValueError('End cannot be Start')
@@ -42,19 +42,19 @@ def path_valid_check(path):
         route = path[key]
         if len(route) == 1:
             val = matrix[route[0][0]][route[0][1]]
-            if val == "t":
+            if val == 0:
                 del path[key]
         else:
             for r in route:
                 val = matrix[r[0]][r[1]]
-                if val == "t":
+                if val == 0:
                     del path[key]
     return path
 
 
 def end_check(path, end):
     if_end_path = {key: path[key] for key in path.keys() if path[key][-1] == end}
-    path_val = get_matrix_val(if_end_path)
+    path_val, path_cor = get_matrix_val(if_end_path)
     final_path = get_valid_path(path_val)
 
     if len(final_path) > 0:
@@ -65,20 +65,21 @@ def end_check(path, end):
 
 def get_matrix_val(path):
     path_val = {}
-
+    path_cor = {}
     for key in path.keys():
         route = path[key]
         vals = [''] * len(route)
         for i, r in enumerate(route):
             vals[i] = matrix[r[0]][r[1]]
         path_val[key] = vals
-    return path_val
+        path_cor[key] = route
+    return path_val, path_cor
 
 
 def get_valid_path(path_val):
     final_path = path_val
     for key in list(final_path.keys()):
-        if 't' in final_path[key]:
+        if 0 in final_path[key]:
             del final_path[key]
         else:
             pass
@@ -102,7 +103,6 @@ def run(start, end):
     path = {}
 
     for loop in range(int(n_loop/2)):
-        #print(loop, "/", int(n_loop/2))
 
         existing_path = path.keys()
         if len(existing_path) == 0:
@@ -202,15 +202,15 @@ def run(start, end):
 
         if_end, path = end_check(path, end)
         if if_end:
-            path_val = get_matrix_val(path)
+            path_val, path_cor = get_matrix_val(path)
             final_path = get_valid_path(path_val)
             if len(final_path) > 0:
-                return loop, final_path
+                return loop, final_path, path_cor
             else:
                 pass
         else:
             pass
-    return 0, None
+    return 0, None, None
 
 
 if __name__ == '__main__':
@@ -221,10 +221,10 @@ if __name__ == '__main__':
     end_at = input("end at (insert coordinate, e.g, 1,1): ")
     start_at = [int(x) for x in start_at.split(",")]
     end_at = [int(x) for x in end_at.split(",")]
-    n, final_path = run(start_at, end_at)
+    n, final_path, path_cor = run(start_at, end_at)
 
     if final_path is None:
         print("No possible route found.")
     else:
         print("Shortest path length: ", n + 1)
-        print("Possible routes: ", list(final_path.keys()))
+        print("Possible routes: ", list(final_path.keys()), list(path_cor.values())[0])
