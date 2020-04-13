@@ -12,6 +12,9 @@ matrix = np.array([[1, 1, 1, 1, 1, 1, 1],
 matrix_size = matrix.shape
 n_loop = matrix_size[0]*matrix_size[1]
 
+directions = {"r": [0, 1], "l": [0, -1], "u": [-1, 0], "d": [1, 0]}
+counter_directions = {"r": "l", "l": "r", "u": "d", "d": "u"}
+
 
 def check_start_end_valid(start, end):
     if matrix[start[0]][start[1]] == 0:
@@ -21,6 +24,10 @@ def check_start_end_valid(start, end):
     elif start == end:
         raise ValueError('End cannot be Start')
     else:
+        if start > end:
+            buffer = end
+            end = start
+            start = buffer
         return start, end
 
 
@@ -90,113 +97,30 @@ def run(start, end):
 
     start, end = check_start_end_valid(start, end)
 
-    if start > end:
-        buffer = end
-        end = start
-        start = buffer
-
-    right_dir = [0, 1]
-    left_dir = [0, -1]
-    up_dir = [-1, 0]
-    down_dir = [1, 0]
-
     path = {}
-
     for loop in range(int(n_loop/2)):
 
         existing_path = path.keys()
         if len(existing_path) == 0:
 
             # first step
-            path["r"] = [[sum(x) for x in zip(start, right_dir)]]
-            path["l"] = [[sum(x) for x in zip(start, left_dir)]]
-            path["u"] = [[sum(x) for x in zip(start, up_dir)]]
-            path["d"] = [[sum(x) for x in zip(start, down_dir)]]
-
+            path = {k: [[sum(x) for x in zip(start, directions[k])]] for k in directions}
             path = bound_check(path)
 
         else:
             for key in list(path.keys()):
                 try:
-                    if key[-1] == "r":
-                        if len(key) == 1:
-                            new_key = key+"r"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], right_dir)]]
-                            new_key = key+"u"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], up_dir)]]
-                            new_key = key+"d"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], down_dir)]]
-                        else:
-                            new_key = key+"r"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], right_dir)]]
-                            new_key = key+"u"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], up_dir)]]
-                            new_key = key+"d"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], down_dir)]]
+                    for direction in directions.keys():
+                        if key[-1] == direction:
+                            path = {key+k: [[sum(x) for x in zip(path[key][0], directions[k])]]
+                                    for k in directions if counter_directions[k] != key[-1]} if len(key) == 1 \
+                                else \
+                                {**path, **{key + k: path[key] + [[sum(x) for x in zip(path[key][-1], directions[k])]]
+                                            for k in directions if counter_directions[k] != key[-1]}}
 
-                        del path[key]
-                        path = bound_check(path)
-                        path = path_valid_check(path)
-
-                    if key[-1] == "d":
-                        if len(key) == 1:
-                            new_key = key + "r"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], right_dir)]]
-                            new_key = key + "l"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], left_dir)]]
-                            new_key = key + "d"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], down_dir)]]
-                        else:
-                            new_key = key + "r"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], right_dir)]]
-                            new_key = key + "l"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], left_dir)]]
-                            new_key = key + "d"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], down_dir)]]
-
-                        del path[key]
-                        path = bound_check(path)
-                        path = path_valid_check(path)
-
-                    if key[-1] == "l":
-                        if len(key) == 1:
-                            new_key = key + "l"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], left_dir)]]
-                            new_key = key + "u"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], up_dir)]]
-                            new_key = key + "d"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], down_dir)]]
-                        else:
-                            new_key = key + "l"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], left_dir)]]
-                            new_key = key + "u"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], up_dir)]]
-                            new_key = key + "d"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], down_dir)]]
-
-                        del path[key]
-                        path = bound_check(path)
-                        path = path_valid_check(path)
-
-                    if key[-1] == "u":
-                        if len(key) == 1:
-                            new_key = key + "r"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], right_dir)]]
-                            new_key = key + "l"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], left_dir)]]
-                            new_key = key + "u"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][0], up_dir)]]
-                        else:
-                            new_key = key + "r"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], right_dir)]]
-                            new_key = key + "l"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], left_dir)]]
-                            new_key = key + "u"
-                            path[new_key] = path[key] + [[sum(x) for x in zip(path[key][-1], up_dir)]]
-
-                        del path[key]
-                        path = bound_check(path)
-                        path = path_valid_check(path)
+                            del path[key]
+                            path = bound_check(path)
+                            path = path_valid_check(path)
                 except:
                     pass
 
